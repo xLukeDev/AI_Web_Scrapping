@@ -1,0 +1,81 @@
+# Testy przy każdym pushu, a pliki wykonywalne dla Windows, macOS i Linuksa
+# przy tagu v* (np. v2.0.0) – trafiają wtedy do GitHub Releases.
+# Klucz OpenRouter NIE jest potrzebny ani wbudowywany: każdy kładzie własny .env obok programu.
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - { os: windows-latest, script: build:win, file: scraper-ai.exe, zip: scraper-ai-windows-x64 }
+          - { os: macos-latest, script: build:mac, file: scraper-ai-mac, zip: scraper-ai-macos-arm64 }
+          - { os: macos-latest, script: build:mac-intel, file: scraper-ai-mac-intel, zip: scraper-ai-macos-x64 }
+          - { os: ubuntu-latest, script: build:linux, file: scraper-ai-linux, zip: scraper-ai-linux-x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run ${{ matrix.script }}
+
+      # macOS nie uruchomi niepodpisanego pliku na Apple Silicon – podpis ad-hoc wystarcza
+      - if: runner.os == 'macOS'
+        run: codesign --force --sign - dist/${{ matrix.file }}
+
+      # Paczka: program + wzór .env + README, żeby od razu było widać, gdzie wpisać klucz
+      - name: Spakuj
+        shell: bash
+        run: |
+          mkdir -p pkg/${{ matrix.zip }}
+          cp dist/${{ matrix.file }} .env.example README.md pkg/${{ matrix.zip }}/
+          cd pkg
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a ../${{ matrix.zip }}.zip ${{ matrix.zip }}
+          else
+            zip -r ../${{ matrix.zip }}.zip ${{ matrix.zip }}
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.zip }}
+          path: ${{ matrix.zip }}.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: "*.zip"
+          generate_release_notes: true

@@ -1,0 +1,11 @@
+node_modules
+
+# Klucz API – nigdy do repozytorium (wzór jest w .env.example)
+.env
+.env.*
+!.env.example
+
+# Wyniki i zbudowane pliki
+data
+dist
+*.exe

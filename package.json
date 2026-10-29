@@ -1,0 +1,29 @@
+{
+  "name": "scraper-ai",
+  "version": "2.0.0",
+  "description": "Scraper stron z pomocą AI: Bun + Vercel AI SDK + OpenRouter + Zod",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "classic": "bun run src/cli.ts classic",
+    "scrape": "bun run src/cli.ts scrape",
+    "bench": "bun run src/cli.ts bench",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "snapshot": "bun run scripts/snapshot.ts",
+    "build:win": "bun build src/cli.ts --compile --minify --target=bun-windows-x64 --windows-title=scraper-ai --windows-description=\"Scraper stron z pomoca AI\" --windows-version=2.0.0.0 --outfile dist/scraper-ai.exe",
+    "build:mac": "bun build src/cli.ts --compile --minify --target=bun-darwin-arm64 --outfile dist/scraper-ai-mac",
+    "build:mac-intel": "bun build src/cli.ts --compile --minify --target=bun-darwin-x64 --outfile dist/scraper-ai-mac-intel",
+    "build:linux": "bun build src/cli.ts --compile --minify --target=bun-linux-x64 --outfile dist/scraper-ai-linux"
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "3.1.0",
+    "ai": "7.0.156",
+    "cheerio": "1.2.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.4",
+    "typescript": "7.0.2"
+  }
+}
