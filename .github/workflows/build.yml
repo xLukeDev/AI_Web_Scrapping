@@ -15,9 +15,9 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
@@ -33,10 +33,10 @@ jobs:
           - { os: windows-latest, script: build:win, file: scraper-ai.exe, zip: scraper-ai-windows-x64 }
           - { os: macos-latest, script: build:mac, file: scraper-ai-mac, zip: scraper-ai-macos-arm64 }
           - { os: macos-latest, script: build:mac-intel, file: scraper-ai-mac-intel, zip: scraper-ai-macos-x64 }
-          - { os: ubuntu-latest, script: build:linux, file: scraper-ai-linux, zip: scraper-ai-linux-x64 }
+          - { os: ubuntu-24.04, script: build:linux, file: scraper-ai-linux, zip: scraper-ai-linux-x64 }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
@@ -60,7 +60,7 @@ jobs:
             zip -r ../${{ matrix.zip }}.zip ${{ matrix.zip }}
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.zip }}
           path: ${{ matrix.zip }}.zip
@@ -68,14 +68,14 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: "*.zip"
           generate_release_notes: true
